@@ -45,10 +45,9 @@
         .modal-content { background: #1e1e1e; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: center; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; }
         .modal-img { width: 180px; height: 250px; margin: 15px 0; background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 15px; }
 
-        /* Стили кнопок как в оригинале */
-        .menu-btn { width: 100%; max-width: 300px; padding: 16px; margin-bottom: 12px; border-radius: 15px; font-weight: bold; border: none; font-size: 16px; cursor: pointer; -webkit-appearance: none; }
-        .btn-buy { background: var(--gold); color: black; border: none; padding: 16px; border-radius: 30px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; cursor: pointer; }
-        .btn-sell { background: #e74c3c; color: white; border: none; padding: 12px; border-radius: 15px; font-weight: bold; width: 100%; max-width: 240px; margin-top: 10px; font-size: 14px; cursor: pointer; }
+        .menu-btn { width: 100%; max-width: 300px; padding: 16px; margin-bottom: 12px; border-radius: 15px; font-weight: bold; border: none; font-size: 16px; cursor: pointer; }
+        .btn-buy { background: var(--gold); color: black; border: none; padding: 16px; border-radius: 30px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
+        .btn-sell { background: #e74c3c; color: white; border: none; padding: 12px; border-radius: 15px; font-weight: bold; width: 100%; max-width: 240px; margin-top: 10px; font-size: 14px; }
         .back-nav { background: none; border: 1px solid #444; color: #666; padding: 8px 20px; border-radius: 20px; margin-top: 25px; cursor: pointer; }
 
         .image-frame { width: 220px; height: 310px; border: 5px solid #555; border-radius: 18px; overflow: hidden; }
@@ -109,6 +108,166 @@
             <h2 id="c-name" style="margin:0; font-size:20px"></h2>
             <p id="c-phrase" style="font-style:italic; color:#aaa; font-size:12px; margin:3px 0"></p>
         </div>
-        <button id="sell-btn" class="btn-sell" onclick="sellCurrentCard()">ПРОДАТЬ (ЦЕНА...)</button>
-        <button id="next-card-btn" class="menu-btn" style="display:none; background: var(--gold); color: black; margin-top:10px;" onclick="showNextPendingCard()">СЛЕДУЮЩАЯ КАРТА</button>
-        <button id="close-card-btn" class="menu-btn" style="background: white;
+        <button id="sell-btn" class="btn-sell" onclick="sellCurrentCard()">ПРОДАТЬ</button>
+        <button id="next-card-btn" class="menu-btn" style="display:none; background: var(--gold); color: black;" onclick="showNextPendingCard()">СЛЕДУЮЩАЯ КАРТА</button>
+        <button id="close-card-btn" class="menu-btn" style="background: white; color: black;" onclick="showScreen('screen-collection')">ЗАКРЫТЬ</button>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="m-name" style="margin:0; font-size:22px"></h2>
+            <div class="modal-img" id="m-img"></div>
+            <p id="m-info" style="color:#aaa; font-size:14px"></p>
+            <div id="m-price" style="font-size:20px; color:var(--gold); font-weight:bold; margin:10px 0"></div>
+            <button id="m-btn" class="btn-buy"></button>
+            <button class="back-nav" onclick="closeModal()">ОТМЕНА</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let tg = window.Telegram.WebApp;
+            tg.expand();
+
+            function safeJSON(key, def) {
+                let data = localStorage.getItem(key);
+                if(!data || data === "undefined" || data.includes('[object')) return def;
+                try { return JSON.parse(data); } catch(e) { return def; }
+            }
+
+            let coins = parseInt(localStorage.getItem('coins')) || 50000;
+            let myCards = safeJSON('myCards', {});
+            let myPacks = safeJSON('myPacks', {});
+            let pendingCards = [];
+            let currentViewingCard = null;
+            let selectedItem = null;
+
+            const rarityColors = { 'common': '#888888', 'rare': '#2ecc71', 'epic': '#3498db', 'legendary': '#9b59b6', 'mystic': '#800000', 'gold': '#ffcc00' };
+            const sellPrices = { 'common': 150, 'rare': 500, 'epic': 1200, 'legendary': 3000, 'mystic': 10000 };
+            const packContents = { 'Basic Pack': 3, 'Golden Pack': 5, 'Premium Pack': 10 };
+
+            function updateUI() {
+                document.getElementById('coin-count').innerText = coins;
+                localStorage.setItem('coins', coins);
+                localStorage.setItem('myCards', JSON.stringify(myCards));
+                localStorage.setItem('myPacks', JSON.stringify(myPacks));
+                renderCollection();
+                renderPacks();
+            }
+
+            window.showScreen = function(id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            }
+
+            window.switchTab = function(type) {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
+                if(type === 'cards') {
+                    document.getElementById('tab-cards').classList.add('active-tab');
+                    document.getElementById('sub-cards').style.display = 'grid';
+                    document.getElementById('sub-packs').style.display = 'none';
+                } else {
+                    document.getElementById('tab-packs').classList.add('active-tab');
+                    document.getElementById('sub-cards').style.display = 'none';
+                    document.getElementById('sub-packs').style.display = 'grid';
+                }
+            }
+
+            window.showBuyModal = function(name, count, price, img, rarity) {
+                selectedItem = { name, price, img, rarity, count };
+                document.getElementById('m-name').innerText = name;
+                document.getElementById('m-info').innerText = "Внутри: " + count + " карт";
+                document.getElementById('m-price').innerText = price + " C";
+                document.getElementById('m-img').style.backgroundImage = `url('${img}')`;
+                document.getElementById('m-img').style.border = `4px solid ${rarityColors[rarity] || '#333'}`;
+                document.getElementById('m-btn').innerText = "КУПИТЬ ПАК";
+                document.getElementById('m-btn').onclick = confirmPurchase;
+                document.getElementById('modal').style.display = 'flex';
+            }
+
+            function confirmPurchase() {
+                if (coins >= selectedItem.price) {
+                    coins -= selectedItem.price;
+                    myPacks[selectedItem.name] = (myPacks[selectedItem.name] || 0) + 1;
+                    closeModal();
+                    updateUI();
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else { alert("Мало монет!"); }
+            }
+
+            window.showOpenModal = function(packName) {
+                const imgs = { 'Basic Pack': 'images/basicpack.jpg', 'Golden Pack': 'images/goldenpack.jpg', 'Premium Pack': 'images/premiumpack.jpg' };
+                selectedItem = { name: packName };
+                document.getElementById('m-name').innerText = packName;
+                document.getElementById('m-img').style.backgroundImage = `url('${imgs[packName]}')`;
+                document.getElementById('m-info').innerText = "У вас есть: " + myPacks[packName] + " шт.";
+                document.getElementById('m-price').innerText = "";
+                document.getElementById('m-btn').innerText = "ОТКРЫТЬ";
+                document.getElementById('m-btn').onclick = openMyPack;
+                document.getElementById('modal').style.display = 'flex';
+            }
+
+            window.openMyPack = async function() {
+                if (myPacks[selectedItem.name] > 0) {
+                    myPacks[selectedItem.name]--;
+                    if(myPacks[selectedItem.name] <= 0) delete myPacks[selectedItem.name];
+                    let res = await fetch('cards.json');
+                    let allCards = await res.json();
+                    let count = packContents[selectedItem.name] || 1;
+                    pendingCards = [];
+                    for(let i=0; i<count; i++) {
+                        let c = allCards[Math.floor(Math.random()*allCards.length)];
+                        pendingCards.push(c);
+                        myCards[c.id] = (myCards[c.id] || 0) + 1;
+                    }
+                    closeModal();
+                    updateUI();
+                    showNextPendingCard();
+                }
+            }
+
+            window.showNextPendingCard = function() {
+                if (pendingCards.length > 0) {
+                    let card = pendingCards.shift();
+                    showCharacter(card, pendingCards.length > 0);
+                }
+            }
+
+            window.openDaily = async function() {
+                let res = await fetch('cards.json');
+                let allCards = await res.json();
+                let card = allCards[Math.floor(Math.random()*allCards.length)];
+                myCards[card.id] = (myCards[card.id] || 0) + 1;
+                showCharacter(card, false);
+                updateUI();
+            }
+
+            function showCharacter(card, hasMore) {
+                currentViewingCard = card;
+                document.getElementById('c-name').innerText = card.name;
+                document.getElementById('c-phrase').innerText = card.phrase;
+                document.getElementById('r-val').innerText = card.rarity;
+                document.getElementById('c-img').style.backgroundImage = `url('${card.image}')`;
+                document.getElementById('c-frame').style.borderColor = rarityColors[card.rarity.toLowerCase()] || '#555';
+
+                const price = sellPrices[card.rarity.toLowerCase()] || 100;
+                document.getElementById('sell-btn').innerText = `ПРОДАТЬ (ЗА ${price} C)`;
+
+                if (hasMore) {
+                    document.getElementById('next-card-btn').style.display = 'block';
+                    document.getElementById('next-card-btn').innerText = `ДАЛЕЕ (${pendingCards.length})`;
+                    document.getElementById('close-card-btn').style.display = 'none';
+                    document.getElementById('sell-btn').style.display = 'none';
+                } else {
+                    document.getElementById('next-card-btn').style.display = 'none';
+                    document.getElementById('close-card-btn').style.display = 'block';
+                    document.getElementById('sell-btn').style.display = 'block';
+                }
+                showScreen('screen-card');
+            }
+
+            window.sellCurrentCard = function() {
+                let id = currentViewingCard.id;
+                let price = sellPrices[currentViewingCard.rarity.toLowerCase()] || 100;
+                if (myCards[id] > 0) {
+                    myCards[id]
