@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 
 # --- НАСТРОЙКИ ---
-API_TOKEN = 'ТВОЙ_ТОКЕН_ОТ_BOT_FATHER'  # Замени на свой реальный токен
+API_TOKEN = '8545249940:AAFktK5Y-wwPlXngUglUxpyXZ8mLw3ECwlU'  # Замени на свой реальный токен
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
