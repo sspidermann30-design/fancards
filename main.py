@@ -1,9 +1,10 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
+from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from logic import get_random_card
 
-# Вставь сюда свой токен!
+# 1. Вставь сюда свой токен
 API_TOKEN = '8545249940:AAFktK5Y-wwPlXngUglUxpyXZ8mLw3ECwlU'
 
 bot = Bot(token=API_TOKEN)
@@ -12,34 +13,40 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
+    # 2. Твоя ссылка на GitHub Pages (проверь, чтобы ник и название были верными)
+    web_link = "https://sspidermann30-design.github.io/fancards/web/index.html"
+
+    # Создаем кнопку для открытия Mini App
+    markup = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Открыть коллекцию 🃏", web_app=WebAppInfo(url=web_link))]
+    ])
+
     await message.answer(
         f"Привет, {message.from_user.first_name}! 👋\n"
-        "Добро пожаловать в мир коллекционных карточек.\n"
-        "Каждые 12 часов ты можешь открыть бесплатный пак!"
+        "Добро пожаловать в игру! Нажми на кнопку ниже, чтобы открыть своё Mini App:",
+        reply_markup=markup
     )
 
-    # Сразу дадим игроку попробовать вытянуть карту
-    card = get_random_card()
 
+@dp.message(Command("pack"))
+async def open_pack(message: types.Message):
+    """Команда для быстрой проверки выпадения карт в чате"""
+    card = get_random_card()
     if card:
-        # Формируем текст под карточкой (фраза + описание)
-        caption_text = (
+        caption = (
             f"🌟 Тебе выпала карта: **{card['name']}**\n"
             f"✨ Редкость: {card['rarity']}\n"
-            f"💬 *\"{card['phrase']}\"*\n\n"
-            f"📜 {card['description']}"
+            f"💬 *\"{card['phrase']}\"*"
         )
-
-        # Отправляем карту (если файл картинки лежит в папке с проектом)
         try:
-            # Важно: файлы должны лежать прямо в папке проекта
             photo = types.FSInputFile(card['image'])
-            await message.answer_photo(photo, caption=caption_text, parse_mode="Markdown")
-        except Exception as e:
-            await message.answer(f"Картинка не найдена, но персонаж выпал: {card['name']}\n(Ошибка: {e})")
+            await message.answer_photo(photo, caption=caption, parse_mode="Markdown")
+        except:
+            await message.answer(f"Выпал {card['name']}, но картинка не найдена!")
 
 
 async def main():
+    print("Бот запущен и готов к работе!")
     await dp.start_polling(bot)
 
 
