@@ -4,7 +4,7 @@ import random
 
 def get_random_card():
     # Открываем твой обновленный cards.json
-    with open('cards.json', 'r', encoding='utf-8') as f:
+    with open('web/cards.json', 'r', encoding='utf-8') as f:
         cards = json.load(f)
 
     # Выбираем редкость (шансы: 85% common, 12% rare, 3% epic)
