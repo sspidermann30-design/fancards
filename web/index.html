@@ -3,26 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Collector</title>
+    <title>FanCards Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #1c1c1c; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .card-preview { border: 2px solid #ffd700; border-radius: 15px; padding: 10px; background: #2c2c2c; display: inline-block; }
-        img { width: 200px; border-radius: 10px; }
-        h1 { color: #ffd700; }
+        body { background: #1a1a1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .card-container { width: 260px; height: 380px; border: 3px solid #ffd700; border-radius: 20px; background: #2a2a2a; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.5s; box-shadow: 0 0 25px rgba(255,215,0,0.2); position: relative; overflow: hidden; }
+        .card-image { width: 90%; height: 70%; border-radius: 10px; background-size: cover; background-position: center; margin-bottom: 10px; }
+        .rarity-badge { padding: 5px 15px; border-radius: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .common { background: #888; }
+        .rare { background: #2a82da; box-shadow: 0 0 10px #2a82da; }
+        .epic { background: #a335ee; box-shadow: 0 0 15px #a335ee; }
+        button { margin-top: 30px; padding: 15px 30px; background: #ffd700; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; color: #000; transition: scale 0.2s; }
+        button:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
-    <h1>Моя Коллекция</h1>
-    <div class="card-preview">
-        <p>Загрузка карточек...</p>
+    <div id="card" class="card-container" style="display: none;">
+        <div id="rarity" class="rarity-badge">Common</div>
+        <div id="image" class="card-image"></div>
+        <h3 id="name" style="margin: 5px 0;">Персонаж</h3>
+        <p id="phrase" style="font-style: italic; font-size: 14px; padding: 0 10px;">Фраза...</p>
     </div>
-    <br>
-    <button onclick="window.Telegram.WebApp.close()" style="margin-top: 20px; padding: 10px; border-radius: 5px; border: none; background: #ffd700; font-weight: bold;">Закрыть</button>
+
+    <div id="pack-cover">
+        <h2 style="color: #ffd700;">Magical Pack</h2>
+        <p>Нажми, чтобы испытать удачу!</p>
+    </div>
+
+    <button id="open-btn" onclick="openPack()">ОТКРЫТЬ ПАК</button>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на всё окно
+        tg.expand();
+
+        function openPack() {
+            // Анимация тряски кнопки
+            const btn = document.getElementById('open-btn');
+            btn.style.display = 'none';
+            document.getElementById('pack-cover').style.display = 'none';
+
+            // Показываем карту
+            const cardElement = document.getElementById('card');
+            cardElement.style.display = 'flex';
+
+            // Здесь мы позже добавим получение данных из бота!
+            // А пока просто тестовый Хагрид
+            document.getElementById('name').innerText = "Rubeus Hagrid";
+            document.getElementById('rarity').innerText = "Rare";
+            document.getElementById('rarity').className = "rarity-badge rare";
+            document.getElementById('phrase').innerText = "Ты волшебник, Гарри!";
+        }
     </script>
 </body>
 </html>
