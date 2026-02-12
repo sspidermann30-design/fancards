@@ -30,8 +30,8 @@ async def cmd_start(message: types.Message):
         card_id = random_card['id']
 
         # 3. Формируем ссылку для Mini App с передачей ID
-        # Убедись, что ссылка на твой GitHub Pages верная!
-        web_link = f"https://sspidermann30-design.github.io/fancards/web/index.html?id={card_id}"
+        # Добавляем &v=..., чтобы Telegram каждый раз открывал страницу заново
+        web_link = f"https://sspidermann30-design.github.io/fancards/web/index.html?id={card_id}&v={random.randint(1, 1000)}"
 
         # 4. Создаем кнопку
         markup = InlineKeyboardMarkup(inline_keyboard=[

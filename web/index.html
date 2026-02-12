@@ -3,55 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanCards Collector</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Общий фон приложения */
         body {
-            background: #121212; color: white; font-family: 'Segoe UI', sans-serif;
-            margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
+            background: radial-gradient(circle, #2c2c2c 0%, #121212 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
-        /* Редкость сверху */
-        .rarity-text { font-size: 14px; color: #aaa; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;}
 
-        /* Рамка ТОЛЬКО вокруг картинки */
-        .image-frame {
-            width: 260px; height: 360px;
-            border: 3px solid #555; border-radius: 15px;
-            overflow: hidden; background: #1a1a1a;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        /* --- ГЛАВНЫЙ ЭКРАН --- */
+        #pack-ui {
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
         }
+
+        .welcome-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+
+        .open-btn {
+            background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+            color: black;
+            padding: 18px 50px;
+            border-radius: 40px;
+            font-weight: bold;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .open-btn:active { transform: scale(0.95); }
+
+        /* --- ЭКРАН КАРТОЧКИ --- */
+        #card-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        /* Редкость: меньше и ближе */
+        .rarity-text {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 6px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        /* Рамка: МЕНЬШЕ И ТОЛЩЕ */
+        .image-frame {
+            width: 210px; /* Уменьшили */
+            height: 300px; /* Уменьшили */
+            border: 6px solid #4a4a4a; /* Жирная рамка */
+            border-radius: 20px;
+            overflow: hidden;
+            background: #1a1a1a;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7); /* Тень вокруг */
+        }
+
         .card-img {
             width: 100%; height: 100%;
-            background-size: cover; /* Чтобы картинка заполняла рамку */
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
         }
 
-        /* Информация под картой */
-        .info { text-align: center; margin-top: 20px; }
-        h2 { margin: 0; font-size: 28px; font-weight: bold; }
-        .phrase { margin: 10px 0; font-style: italic; color: #bbb; font-size: 16px; }
+        .info { text-align: center; margin-top: 15px; }
+        h2 { margin: 0; font-size: 24px; font-weight: bold; }
+        .phrase { margin: 5px 0; font-style: italic; color: #aaa; font-size: 14px; padding: 0 20px; }
 
-        /* Кнопка Назад - маленькая и внизу */
         .back-btn {
-            margin-top: 50px; background: none; border: 1px solid #444;
-            color: #666; padding: 6px 18px; border-radius: 15px; font-size: 13px;
+            margin-top: 25px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            color: #555;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
         }
-        .open-btn { background: white; color: black; padding: 15px 40px; border-radius: 30px; font-weight: bold; border: none; font-size: 18px;}
+
+        /* Анимации */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
+
     <div id="pack-ui">
+        <div class="welcome-title">Готов испытать удачу?</div>
+        <div style="font-size: 60px; margin-bottom: 20px;">✨</div>
         <button class="open-btn" onclick="openPack()">ОТКРЫТЬ ПАК</button>
     </div>
 
-    <div id="card-display" style="display:none; flex-direction: column; align-items: center;">
-        <div class="rarity-text" id="r-val"></div>
-        <div class="image-frame"><div class="card-img" id="c-img"></div></div>
-        <div class="info">
-            <h2 id="c-name"></h2>
-            <p class="phrase" id="c-phrase"></p>
+    <div id="card-display">
+        <div class="rarity-text" id="r-val">Common</div>
+        <div class="image-frame">
+            <div class="card-img" id="c-img"></div>
         </div>
-        <button class="back-btn" onclick="location.reload()">назад</button>
+        <div class="info">
+            <h2 id="c-name">Загрузка...</h2>
+            <p class="phrase" id="c-phrase">...</p>
+        </div>
+        <button class="back-btn" onclick="location.reload()">← Назад</button>
     </div>
 
     <script>
@@ -63,8 +138,8 @@
             const cardId = urlParams.get('id');
 
             try {
-                // Добавляем случайное число к ссылке на json, чтобы избежать кэша
-                const response = await fetch('cards.json?v=' + Math.random());
+                // Добавляем v=... для обхода кэша
+                const response = await fetch('cards.json?v=' + Date.now());
                 const cards = await response.json();
                 const character = cards.find(c => c.id == cardId);
 
@@ -75,8 +150,6 @@
                     document.getElementById('c-name').innerText = character.name;
                     document.getElementById('c-phrase').innerText = character.phrase;
                     document.getElementById('r-val').innerText = character.rarity;
-
-                    // Устанавливаем картинку
                     document.getElementById('c-img').style.backgroundImage = `url('${character.image}')`;
                 }
             } catch (e) {
