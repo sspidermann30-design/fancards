@@ -6,15 +6,15 @@
     "rarity": "common",
     "phrase": "Я не должен был этого говорить...",
     "description": "Лесничий Хогвартса. Обожает драконов.",
-    "image": "Hagrid_trading222.png"
+    "image": "images/Hagrid_trading222.png"
   },
   {
     "id": 2,
     "name": "Рон Уизли",
     "theme": "Гарри Поттер",
-    "rarity": "Common",
+    "rarity": "common",
     "phrase": "А почему это всегда происходит с нами?",
     "description": "Лучший друг Гарри и часть легендарного трио.",
-    "image": "Ron_Weasley222.png"
+    "image": "images/Ron_Weasley222.png"
   }
 ]
