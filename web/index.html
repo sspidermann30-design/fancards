@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -45,14 +45,14 @@
         .modal-content { background: #1e1e1e; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: center; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; }
         .modal-img { width: 180px; height: 250px; margin: 15px 0; background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 15px; }
 
-        .btn-buy { background: var(--gold); color: black; border: none; padding: 16px; border-radius: 30px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
-        .btn-sell { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 15px; font-weight: bold; width: 100%; margin-top: 10px; font-size: 14px; }
-
-        .image-frame { width: 240px; height: 340px; border: 6px solid #555; border-radius: 20px; overflow: hidden; }
-        .card-img { width: 100%; height: 100%; background-size: cover; background-position: center; }
-
-        .menu-btn { width: 100%; max-width: 300px; padding: 16px; margin-bottom: 12px; border-radius: 15px; font-weight: bold; border: none; font-size: 16px; cursor: pointer; }
+        /* Стили кнопок как в оригинале */
+        .menu-btn { width: 100%; max-width: 300px; padding: 16px; margin-bottom: 12px; border-radius: 15px; font-weight: bold; border: none; font-size: 16px; cursor: pointer; -webkit-appearance: none; }
+        .btn-buy { background: var(--gold); color: black; border: none; padding: 16px; border-radius: 30px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; cursor: pointer; }
+        .btn-sell { background: #e74c3c; color: white; border: none; padding: 12px; border-radius: 15px; font-weight: bold; width: 100%; max-width: 240px; margin-top: 10px; font-size: 14px; cursor: pointer; }
         .back-nav { background: none; border: 1px solid #444; color: #666; padding: 8px 20px; border-radius: 20px; margin-top: 25px; cursor: pointer; }
+
+        .image-frame { width: 220px; height: 310px; border: 5px solid #555; border-radius: 18px; overflow: hidden; }
+        .card-img { width: 100%; height: 100%; background-size: cover; background-position: center; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -67,9 +67,9 @@
     <div id="screen-main" class="screen active">
         <div style="font-size: 40px; margin: 20px 0;">🃏</div>
         <h1>FANCARDS</h1>
-        <button class="menu-btn" onclick="openDaily()">🎁 ЕЖЕДНЕВНЫЕ ПАКИ</button>
-        <button class="menu-btn" onclick="showScreen('screen-collection')">МОЯ КОЛЛЕКЦИЯ</button>
-        <button class="menu-btn" onclick="showScreen('screen-market')">МАРКЕТ ПАКОВ</button>
+        <button class="menu-btn" style="background: white; color: black;" onclick="openDaily()">🎁 ЕЖЕДНЕВНЫЕ ПАКИ</button>
+        <button class="menu-btn" style="background: #222; color: white; border: 1px solid #444;" onclick="showScreen('screen-collection')">МОЯ КОЛЛЕКЦИЯ</button>
+        <button class="menu-btn" style="background: #222; color: white; border: 1px solid #444;" onclick="showScreen('screen-market')">МАРКЕТ ПАКОВ</button>
     </div>
 
     <div id="screen-collection" class="screen">
@@ -103,225 +103,12 @@
     </div>
 
     <div id="screen-card" class="screen">
-        <div id="r-val"></div>
+        <div id="r-val" style="font-size:10px; color:#888; text-transform:uppercase; margin-bottom:5px"></div>
         <div class="image-frame" id="c-frame"><div class="card-img" id="c-img"></div></div>
-        <div style="text-align:center; margin-top:15px">
-            <h2 id="c-name"></h2>
-            <p id="c-phrase"></p>
+        <div style="text-align:center; margin-top:10px">
+            <h2 id="c-name" style="margin:0; font-size:20px"></h2>
+            <p id="c-phrase" style="font-style:italic; color:#aaa; font-size:12px; margin:3px 0"></p>
         </div>
-        <button id="sell-btn" class="btn-sell" onclick="sellCurrentCard()">ПРОДАТЬ</button>
-        <button id="next-card-btn" class="menu-btn" style="display:none; background: var(--gold);" onclick="showNextPendingCard()">СЛЕДУЮЩАЯ КАРТА</button>
-        <button id="close-card-btn" class="menu-btn" onclick="showScreen('screen-collection')">ЗАКРЫТЬ</button>
-    </div>
-
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <h2 id="m-name"></h2>
-            <div class="modal-img" id="m-img"></div>
-            <p id="m-info"></p>
-            <div id="m-price"></div>
-            <button id="m-btn" class="btn-buy"></button>
-            <button class="back-nav" onclick="closeModal()">ОТМЕНА</button>
-        </div>
-    </div>
-
-    <script>
-        // Инициализация Telegram
-        let tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Безопасная загрузка данных
-        function safeJSON(key, def) {
-            let data = localStorage.getItem(key);
-            if(!data || data.includes('[object')) return def;
-            try { return JSON.parse(data); } catch(e) { return def; }
-        }
-
-        let coins = parseInt(localStorage.getItem('coins')) || 50000;
-        let myCards = safeJSON('myCards', {});
-        let myPacks = safeJSON('myPacks', {});
-        let pendingCards = [];
-        let currentViewingCard = null;
-        let selectedItem = null;
-
-        const rarityColors = { 'common': '#888888', 'rare': '#2ecc71', 'epic': '#3498db', 'legendary': '#9b59b6', 'mystic': '#800000', 'gold': '#ffcc00' };
-        const sellPrices = { 'common': 150, 'rare': 500, 'epic': 1200, 'legendary': 3000, 'mystic': 10000 };
-        const packContents = { 'Basic Pack': 3, 'Golden Pack': 5, 'Premium Pack': 10 };
-
-        function updateUI() {
-            document.getElementById('coin-count').innerText = coins;
-            localStorage.setItem('coins', coins);
-            localStorage.setItem('myCards', JSON.stringify(myCards));
-            localStorage.setItem('myPacks', JSON.stringify(myPacks));
-            renderCollection();
-            renderPacks();
-        }
-
-        window.showScreen = function(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        window.switchTab = function(type) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active-tab'));
-            if(type === 'cards') {
-                document.getElementById('tab-cards').classList.add('active-tab');
-                document.getElementById('sub-cards').style.display = 'grid';
-                document.getElementById('sub-packs').style.display = 'none';
-            } else {
-                document.getElementById('tab-packs').classList.add('active-tab');
-                document.getElementById('sub-cards').style.display = 'none';
-                document.getElementById('sub-packs').style.display = 'grid';
-            }
-        }
-
-        window.showBuyModal = function(name, count, price, img, rarity) {
-            selectedItem = { name, price, img, rarity, count };
-            document.getElementById('m-name').innerText = name;
-            document.getElementById('m-info').innerText = "Внутри: " + count + " карт";
-            document.getElementById('m-price').innerText = price + " C";
-            document.getElementById('m-img').style.backgroundImage = `url('${img}')`;
-            document.getElementById('m-img').style.border = `4px solid ${rarityColors[rarity] || '#333'}`;
-            document.getElementById('m-btn').innerText = "КУПИТЬ ПАК";
-            document.getElementById('m-btn').onclick = confirmPurchase;
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        function confirmPurchase() {
-            if (coins >= selectedItem.price) {
-                coins -= selectedItem.price;
-                myPacks[selectedItem.name] = (myPacks[selectedItem.name] || 0) + 1;
-                closeModal();
-                updateUI();
-                tg.HapticFeedback.notificationOccurred('success');
-            } else { alert("Мало монет!"); }
-        }
-
-        window.showOpenModal = function(packName) {
-            const packImages = { 'Basic Pack': 'images/basicpack.jpg', 'Golden Pack': 'images/goldenpack.jpg', 'Premium Pack': 'images/premiumpack.jpg' };
-            selectedItem = { name: packName };
-            document.getElementById('m-name').innerText = packName;
-            document.getElementById('m-img').style.backgroundImage = `url('${packImages[packName]}')`;
-            document.getElementById('m-info').innerText = "У вас есть: " + myPacks[packName] + " шт.";
-            document.getElementById('m-price').innerText = "";
-            document.getElementById('m-btn').innerText = "ОТКРЫТЬ";
-            document.getElementById('m-btn').onclick = openMyPack;
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        window.openMyPack = async function() {
-            if (myPacks[selectedItem.name] > 0) {
-                myPacks[selectedItem.name]--;
-                if(myPacks[selectedItem.name] <= 0) delete myPacks[selectedItem.name];
-
-                let res = await fetch('cards.json');
-                let allCards = await res.json();
-                let count = packContents[selectedItem.name] || 1;
-
-                pendingCards = [];
-                for(let i=0; i<count; i++) {
-                    let c = allCards[Math.floor(Math.random()*allCards.length)];
-                    pendingCards.push(c);
-                    myCards[c.id] = (myCards[c.id] || 0) + 1;
-                }
-                closeModal();
-                updateUI();
-                showNextPendingCard();
-            }
-        }
-
-        window.showNextPendingCard = function() {
-            if (pendingCards.length > 0) {
-                let card = pendingCards.shift();
-                currentViewingCard = card;
-                document.getElementById('c-name').innerText = card.name;
-                document.getElementById('c-phrase').innerText = card.phrase;
-                document.getElementById('r-val').innerText = card.rarity;
-                document.getElementById('c-img').style.backgroundImage = `url('${card.image}')`;
-                document.getElementById('c-frame').style.borderColor = rarityColors[card.rarity.toLowerCase()] || '#555';
-
-                if (pendingCards.length > 0) {
-                    document.getElementById('next-card-btn').style.display = 'block';
-                    document.getElementById('next-card-btn').innerText = `ДАЛЕЕ (${pendingCards.length})`;
-                    document.getElementById('close-card-btn').style.display = 'none';
-                    document.getElementById('sell-btn').style.display = 'none';
-                } else {
-                    document.getElementById('next-card-btn').style.display = 'none';
-                    document.getElementById('close-card-btn').style.display = 'block';
-                    document.getElementById('sell-btn').style.display = 'block';
-                }
-                showScreen('screen-card');
-            }
-        }
-
-        window.openDaily = async function() {
-            let res = await fetch('cards.json');
-            let allCards = await res.json();
-            let card = allCards[Math.floor(Math.random()*allCards.length)];
-            myCards[card.id] = (myCards[card.id] || 0) + 1;
-            currentViewingCard = card;
-            showCharacter(card);
-            updateUI();
-        }
-
-        function showCharacter(card) {
-            document.getElementById('c-name').innerText = card.name;
-            document.getElementById('c-phrase').innerText = card.phrase;
-            document.getElementById('r-val').innerText = card.rarity;
-            document.getElementById('c-img').style.backgroundImage = `url('${card.image}')`;
-            document.getElementById('c-frame').style.borderColor = rarityColors[card.rarity.toLowerCase()] || '#555';
-            document.getElementById('sell-btn').style.display = 'block';
-            document.getElementById('next-card-btn').style.display = 'none';
-            document.getElementById('close-card-btn').style.display = 'block';
-            showScreen('screen-card');
-        }
-
-        window.sellCurrentCard = function() {
-            if (myCards[currentViewingCard.id] > 0) {
-                myCards[currentViewingCard.id]--;
-                if(myCards[currentViewingCard.id] <= 0) delete myCards[currentViewingCard.id];
-                coins += sellPrices[currentViewingCard.rarity.toLowerCase()] || 100;
-                showScreen('screen-collection');
-                updateUI();
-            }
-        }
-
-        window.closeModal = function() { document.getElementById('modal').style.display = 'none'; }
-
-        function renderCollection() {
-            let grid = document.getElementById('sub-cards');
-            grid.innerHTML = '';
-            fetch('cards.json').then(r => r.json()).then(cards => {
-                Object.keys(myCards).forEach(id => {
-                    let card = cards.find(c => c.id == id);
-                    if(card && myCards[id] > 0) {
-                        let div = document.createElement('div');
-                        div.className = 'item-card';
-                        div.style.borderColor = rarityColors[card.rarity.toLowerCase()];
-                        div.innerHTML = `<div class="count-badge">${myCards[id]}x</div><div class="item-img" style="background-image:url('${card.image}')"></div><div class="item-name">${card.name}</div>`;
-                        div.onclick = () => showCharacter(card);
-                        grid.appendChild(div);
-                    }
-                });
-            });
-        }
-
-        function renderPacks() {
-            let grid = document.getElementById('sub-packs');
-            grid.innerHTML = '';
-            let imgs = { 'Basic Pack': 'images/basicpack.jpg', 'Golden Pack': 'images/goldenpack.jpg', 'Premium Pack': 'images/premiumpack.jpg' };
-            Object.keys(myPacks).forEach(name => {
-                if(myPacks[name] > 0) {
-                    let div = document.createElement('div');
-                    div.className = 'item-card';
-                    div.innerHTML = `<div class="count-badge">${myPacks[name]}x</div><div class="item-img" style="background-image:url('${imgs[name]}')"></div><div class="item-name">${name}</div>`;
-                    div.onclick = () => showOpenModal(name);
-                    grid.appendChild(div);
-                }
-            });
-        }
-
-        updateUI();
-    </script>
-</body>
-</html>
+        <button id="sell-btn" class="btn-sell" onclick="sellCurrentCard()">ПРОДАТЬ (ЦЕНА...)</button>
+        <button id="next-card-btn" class="menu-btn" style="display:none; background: var(--gold); color: black; margin-top:10px;" onclick="showNextPendingCard()">СЛЕДУЮЩАЯ КАРТА</button>
+        <button id="close-card-btn" class="menu-btn" style="background: white;
