@@ -3,158 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FanCards Collector</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Общий фон приложения */
         body {
-            background: radial-gradient(circle, #2c2c2c 0%, #121212 100%);
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
+            background: #121212; color: white; font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding-top: 70px; display: flex; flex-direction: column; align-items: center;
         }
 
-        /* --- ГЛАВНЫЙ ЭКРАН --- */
-        #pack-ui {
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
+        /* --- ШАПКА ПРИЛОЖЕНИЯ --- */
+        header {
+            position: fixed; top: 0; width: 100%; height: 60px;
+            background: #1e1e1e; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 20px; box-sizing: border-box;
+            border-bottom: 2px solid #333; z-index: 1000;
+        }
+        .logo { font-weight: 900; letter-spacing: 2px; color: #fff; font-size: 18px; }
+        .balance { background: #2c2c2c; padding: 5px 12px; border-radius: 15px; font-size: 14px; border: 1px solid #ffcc00; color: #ffcc00; }
+
+        /* --- КОНТЕНТ --- */
+        .screen { display: none; width: 100%; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
+        .active { display: flex; }
+
+        h1 { font-size: 32px; margin-bottom: 30px; text-align: center; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+        /* --- КНОПКИ МЕНЮ --- */
+        .menu-btn {
+            width: 90%; max-width: 300px; padding: 15px; margin-bottom: 15px;
+            background: #1e1e1e; border: 1px solid #444; color: white;
+            border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center;
+        }
+        .primary-btn { background: white; color: black; border: none; }
+
+        /* --- СЕТКА КОЛЛЕКЦИИ --- */
+        .collection-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 350px;
+        }
+        .mini-card {
+            aspect-ratio: 2/3; background: #1e1e1e; border: 2px solid #444; border-radius: 8px;
+            background-size: cover; background-position: center; cursor: pointer;
         }
 
-        .welcome-title {
-            font-size: 24px;
-            margin-bottom: 30px;
-            text-shadow: 0 0 15px rgba(255,255,255,0.3);
-        }
-
-        .open-btn {
-            background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
-            color: black;
-            padding: 18px 50px;
-            border-radius: 40px;
-            font-weight: bold;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .open-btn:active { transform: scale(0.95); }
-
-        /* --- ЭКРАН КАРТОЧКИ --- */
-        #card-display {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        /* Редкость: меньше и ближе */
-        .rarity-text {
-            font-size: 11px;
-            color: #888;
-            margin-bottom: 6px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-        }
-
-        /* Рамка: МЕНЬШЕ И ТОЛЩЕ */
-        .image-frame {
-            width: 210px; /* Уменьшили */
-            height: 300px; /* Уменьшили */
-            border: 6px solid #4a4a4a; /* Жирная рамка */
-            border-radius: 20px;
-            overflow: hidden;
-            background: #1a1a1a;
-            box-shadow: 0 0 30px rgba(0,0,0,0.7); /* Тень вокруг */
-        }
-
-        .card-img {
-            width: 100%; height: 100%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
+        /* --- КАРТОЧКА (ПОЛНАЯ) --- */
+        .rarity-text { font-size: 11px; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .image-frame { width: 210px; height: 300px; border: 5px solid #555; border-radius: 20px; overflow: hidden; background: #000; }
+        .card-img { width: 100%; height: 100%; background-size: cover; background-position: center; }
         .info { text-align: center; margin-top: 15px; }
-        h2 { margin: 0; font-size: 24px; font-weight: bold; }
-        .phrase { margin: 5px 0; font-style: italic; color: #aaa; font-size: 14px; padding: 0 20px; }
 
-        .back-btn {
-            margin-top: 25px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #333;
-            color: #555;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
-        }
+        /* БУРГЕР (Кнопка назад в интерфейсе) */
+        .nav-footer { position: fixed; bottom: 20px; display: flex; gap: 10px; }
+        .nav-btn { background: #222; border: 1px solid #444; color: #aaa; padding: 10px 15px; border-radius: 10px; font-size: 12px; }
 
-        /* Анимации */
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
     </style>
 </head>
 <body>
 
-    <div id="pack-ui">
-        <div class="welcome-title">Готов испытать удачу?</div>
-        <div style="font-size: 60px; margin-bottom: 20px;">✨</div>
-        <button class="open-btn" onclick="openPack()">ОТКРЫТЬ ПАК</button>
+    <header>
+        <div class="logo">FANCARDS</div>
+        <div class="balance">💰 <span id="coin-count">50000</span></div>
+    </header>
+
+    <div id="screen-main" class="screen active">
+        <h1>FANCARDS</h1>
+        <button class="menu-btn primary-btn" onclick="openPack()">🎁 ЕЖЕДНЕВНЫЙ ПАК</button>
+        <button class="menu-btn" onclick="showScreen('screen-collection')">🗂 МОЯ КОЛЛЕКЦИЯ</button>
+        <button class="menu-btn" onclick="showScreen('screen-market')">⚖️ РЫНОК</button>
     </div>
 
-    <div id="card-display">
-        <div class="rarity-text" id="r-val">Common</div>
-        <div class="image-frame">
-            <div class="card-img" id="c-img"></div>
-        </div>
+    <div id="screen-collection" class="screen">
+        <h1>КОЛЛЕКЦИЯ</h1>
+        <div class="collection-grid" id="collection-grid">
+            </div>
+        <button class="nav-btn" style="margin-top:20px" onclick="showScreen('screen-main')">В МЕНЮ</button>
+    </div>
+
+    <div id="screen-card" class="screen">
+        <div class="rarity-text" id="r-val"></div>
+        <div class="image-frame"><div class="card-img" id="c-img"></div></div>
         <div class="info">
-            <h2 id="c-name">Загрузка...</h2>
-            <p class="phrase" id="c-phrase">...</p>
+            <h2 id="c-name" style="margin:0"></h2>
+            <p id="c-phrase" style="font-style:italic; color:#aaa"></p>
         </div>
-        <button class="back-btn" onclick="location.reload()">← Назад</button>
+        <button class="menu-btn" style="margin-top:20px" onclick="showScreen('screen-collection')">ЗАКРЫТЬ</button>
+    </div>
+
+    <div id="screen-market" class="screen">
+        <h1>РЫНОК</h1>
+        <p style="color:#666">Здесь скоро можно будет торговать...</p>
+        <button class="nav-btn" onclick="showScreen('screen-main')">В МЕНЮ</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Данные игрока (загрузка из памяти или старт)
+        let coins = parseInt(localStorage.getItem('coins')) || 50000;
+        let myCards = JSON.parse(localStorage.getItem('myCards')) || [];
+
+        updateUI();
+
+        function updateUI() {
+            document.getElementById('coin-count').innerText = coins;
+            localStorage.setItem('coins', coins);
+            localStorage.setItem('myCards', JSON.stringify(myCards));
+            renderCollection();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
         async function openPack() {
+            tg.HapticFeedback.impactOccurred('heavy');
             const urlParams = new URLSearchParams(window.location.search);
-            const cardId = urlParams.get('id');
+            const cardId = urlParams.get('id') || 1;
 
             try {
-                // Добавляем v=... для обхода кэша
                 const response = await fetch('cards.json?v=' + Date.now());
                 const cards = await response.json();
                 const character = cards.find(c => c.id == cardId);
 
                 if (character) {
-                    document.getElementById('pack-ui').style.display = 'none';
-                    document.getElementById('card-display').style.display = 'flex';
+                    // Добавляем в коллекцию, если её там нет
+                    if (!myCards.includes(character.id)) {
+                        myCards.push(character.id);
+                    }
 
+                    // Показываем карту
                     document.getElementById('c-name').innerText = character.name;
                     document.getElementById('c-phrase').innerText = character.phrase;
                     document.getElementById('r-val').innerText = character.rarity;
                     document.getElementById('c-img').style.backgroundImage = `url('${character.image}')`;
+
+                    showScreen('screen-card');
+                    updateUI();
                 }
-            } catch (e) {
-                console.error("Ошибка:", e);
-            }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderCollection() {
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = '';
+
+            // В реальной игре мы бы подтягивали данные из cards.json для каждой карты в myCards
+            fetch('cards.json').then(res => res.json()).then(allCards => {
+                myCards.forEach(id => {
+                    const card = allCards.find(c => c.id == id);
+                    if(card) {
+                        const div = document.createElement('div');
+                        div.className = 'mini-card';
+                        div.style.backgroundImage = `url('${card.image}')`;
+                        div.onclick = () => {
+                            document.getElementById('c-name').innerText = card.name;
+                            document.getElementById('c-phrase').innerText = card.phrase;
+                            document.getElementById('r-val').innerText = card.rarity;
+                            document.getElementById('c-img').style.backgroundImage = `url('${card.image}')`;
+                            showScreen('screen-card');
+                        };
+                        grid.appendChild(div);
+                    }
+                });
+            });
         }
     </script>
 </body>
