@@ -7,7 +7,6 @@
     <style>
         :root {
             --gold: #ffcc00; --bg: #121212; --card-bg: #1e1e1e; --border: #333;
-            /* Цвета редкости */
             --common: #888888; --rare: #2ecc71; --epic: #3498db; --legendary: #9b59b6; --mystic: #800000;
         }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding-top: 80px; display: flex; flex-direction: column; align-items: center; }
@@ -29,44 +28,28 @@
         .grid-3 { grid-template-columns: repeat(3, 1fr); }
         .grid-2 { grid-template-columns: repeat(2, 1fr); }
 
-        /* Улучшенные карточки с рамками */
         .item-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-sizing: border-box;
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 12px;
+            padding: 8px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; position: relative;
         }
-        .item-img {
-            width: 100%;
-            aspect-ratio: 2/3;
-            background-size: cover;
-            background-position: center;
-            border-radius: 6px;
-            margin-bottom: 8px;
+
+        /* Счетчик повторок */
+        .count-badge {
+            position: absolute; top: -5px; right: -5px; background: white; color: black;
+            font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 8px; border: 1px solid #000;
         }
+
+        .item-img { width: 100%; aspect-ratio: 2/3; background-size: cover; background-position: center; border-radius: 6px; margin-bottom: 8px; }
         .item-name { font-size: 10px; font-weight: bold; color: #bbb; text-align: center; text-transform: uppercase; }
 
-        /* Исправленная модалка */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; }
-        .modal-content {
-            background: #1e1e1e; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px;
-            text-align: center; border: 1px solid #444; display: flex; flex-direction: column; align-items: center;
-        }
-        .modal-img {
-            width: 180px; height: 250px;
-            margin: 15px 0;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            border-radius: 15px;
-        }
-        .btn-buy { background: var(--gold); color: black; border: none; padding: 16px; border-radius: 30px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
+        .modal-content { background: #1e1e1e; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: center; border: 1px solid #444; display: flex; flex-direction: column; align-items: center; }
+        .modal-img { width: 180px; height: 250px; margin: 15px 0; background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 15px; }
 
-        .image-frame { width: 240px; height: 340px; border: 6px solid #555; border-radius: 20px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .btn-buy { background: var(--gold); color: black; border: none; padding: 16px; border-radius: 30px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
+        .btn-sell { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 15px; font-weight: bold; width: 100%; margin-top: 10px; font-size: 14px; }
+
+        .image-frame { width: 240px; height: 340px; border: 6px solid #555; border-radius: 20px; overflow: hidden; }
         .card-img { width: 100%; height: 100%; background-size: cover; background-position: center; }
 
         .menu-btn { width: 100%; max-width: 300px; padding: 16px; margin-bottom: 12px; border-radius: 15px; font-weight: bold; border: none; font-size: 16px; cursor: pointer; }
@@ -85,7 +68,7 @@
     <div id="screen-main" class="screen active">
         <div style="font-size: 40px; margin: 20px 0;">🃏</div>
         <h1>FANCARDS</h1>
-        <button class="menu-btn" style="background: white; color: black;" onclick="openPack()">🎁 ЕЖЕДНЕВНЫЕ ПАКИ</button>
+        <button class="menu-btn" style="background: white; color: black;" onclick="openDaily()">🎁 ЕЖЕДНЕВНЫЕ ПАКИ</button>
         <button class="menu-btn" style="background: #222; color: white; border: 1px solid #444;" onclick="showScreen('screen-collection')">МОЯ КОЛЛЕКЦИЯ</button>
         <button class="menu-btn" style="background: #222; color: white; border: 1px solid #444;" onclick="showScreen('screen-market')">МАРКЕТ ПАКОВ</button>
     </div>
@@ -96,7 +79,7 @@
             <div id="tab-cards" class="tab active-tab" onclick="switchTab('cards')">КАРТОЧКИ</div>
             <div id="tab-packs" class="tab" onclick="switchTab('packs')">ПАКИ</div>
         </div>
-        <div id="sub-cards" class="grid grid-3" style="display: grid;"></div>
+        <div id="sub-cards" class="grid grid-3"></div>
         <div id="sub-packs" class="grid grid-2" style="display: none;"></div>
         <button class="back-nav" onclick="showScreen('screen-main')">назад в меню</button>
     </div>
@@ -127,7 +110,8 @@
             <h2 id="c-name" style="margin:0; font-size:24px"></h2>
             <p id="c-phrase" style="font-style:italic; color:#aaa; margin:5px 0"></p>
         </div>
-        <button class="menu-btn" style="background: white; color: black; margin-top: 20px;" onclick="showScreen('screen-collection')">В КОЛЛЕКЦИЮ</button>
+        <button id="sell-btn" class="btn-sell" onclick="sellCurrentCard()">ПРОДАТЬ (ЦЕНА...)</button>
+        <button class="menu-btn" style="background: white; color: black; margin-top: 10px;" onclick="showScreen('screen-collection')">В КОЛЛЕКЦИЮ</button>
     </div>
 
     <div class="modal" id="modal">
@@ -146,17 +130,19 @@
         tg.expand();
 
         let coins = parseInt(localStorage.getItem('coins')) || 50000;
-        let myCards = JSON.parse(localStorage.getItem('myCards')) || [];
-        let myPacks = JSON.parse(localStorage.getItem('myPacks')) || [];
+        // Храним объекты { id: count }
+        let myCards = JSON.parse(localStorage.getItem('myCards')) || {};
+        // Храним объекты { packName: count }
+        let myPacks = JSON.parse(localStorage.getItem('myPacks')) || {};
         let selectedItem = null;
+        let currentViewingCard = null;
 
         const rarityColors = {
-            'common': '#888888',
-            'rare': '#2ecc71',
-            'epic': '#3498db',
-            'legendary': '#9b59b6',
-            'mystic': '#800000',
-            'gold': '#ffcc00'
+            'common': '#888888', 'rare': '#2ecc71', 'epic': '#3498db', 'legendary': '#9b59b6', 'mystic': '#800000', 'gold': '#ffcc00'
+        };
+
+        const sellPrices = {
+            'common': 150, 'rare': 500, 'epic': 1200, 'legendary': 3000, 'mystic': 10000
         };
 
         function updateUI() {
@@ -186,8 +172,9 @@
             }
         }
 
+        // Покупка пака
         function showBuyModal(name, info, price, img, rarity) {
-            selectedItem = { name, price, img, rarity, type: 'buy' };
+            selectedItem = { name, price, img, rarity };
             document.getElementById('m-name').innerText = name;
             document.getElementById('m-info').innerText = "Внутри: " + info;
             document.getElementById('m-price').innerText = price + " C";
@@ -201,20 +188,25 @@
         function confirmPurchase() {
             if (coins >= selectedItem.price) {
                 coins -= selectedItem.price;
-                myPacks.push({ name: selectedItem.name, img: selectedItem.img, rarity: selectedItem.rarity });
+                myPacks[selectedItem.name] = (myPacks[selectedItem.name] || 0) + 1;
                 tg.HapticFeedback.notificationOccurred('success');
                 closeModal();
                 updateUI();
             } else { alert("Недостаточно монет!"); }
         }
 
-        function showOpenModal(index) {
-            let pack = myPacks[index];
-            selectedItem = { index, rarity: pack.rarity };
-            document.getElementById('m-name').innerText = pack.name;
-            document.getElementById('m-img').style.backgroundImage = `url('${pack.img}')`;
-            document.getElementById('m-img').style.border = `4px solid ${rarityColors[pack.rarity] || '#333'}`;
-            document.getElementById('m-info').innerText = "Готовы открыть пак?";
+        // Открытие пака из коллекции
+        function showOpenModal(packName) {
+            // Находим данные пака для отображения
+            const packImages = {
+                'Basic Pack': 'images/basicpack.jpg',
+                'Golden Pack': 'images/goldenpack.jpg',
+                'Premium Pack': 'images/premiumpack.jpg'
+            };
+            selectedItem = { name: packName };
+            document.getElementById('m-name').innerText = packName;
+            document.getElementById('m-img').style.backgroundImage = `url('${packImages[packName]}')`;
+            document.getElementById('m-info').innerText = "У вас есть: " + myPacks[packName] + " шт.";
             document.getElementById('m-price').innerText = "";
             document.getElementById('m-btn').innerText = "ОТКРЫТЬ";
             document.getElementById('m-btn').onclick = openMyPack;
@@ -222,37 +214,63 @@
         }
 
         async function openMyPack() {
-            tg.HapticFeedback.impactOccurred('heavy');
-            myPacks.splice(selectedItem.index, 1);
-            closeModal();
+            if (myPacks[selectedItem.name] > 0) {
+                myPacks[selectedItem.name]--;
+                if (myPacks[selectedItem.name] === 0) delete myPacks[selectedItem.name];
 
-            const randomId = Math.floor(Math.random() * 2) + 1;
-            const res = await fetch('cards.json');
-            const cards = await res.json();
-            const character = cards.find(c => c.id == randomId);
+                tg.HapticFeedback.impactOccurred('heavy');
+                closeModal();
 
-            if (character) {
-                if (!myCards.includes(character.id)) myCards.push(character.id);
+                const res = await fetch('cards.json');
+                const cards = await res.json();
+                const character = cards[Math.floor(Math.random() * cards.length)];
+
+                addCardToInventory(character.id);
                 showCharacter(character);
             }
         }
 
+        function addCardToInventory(id) {
+            myCards[id] = (myCards[id] || 0) + 1;
+            updateUI();
+        }
+
         function showCharacter(character) {
+            currentViewingCard = character;
             document.getElementById('c-name').innerText = character.name;
             document.getElementById('c-phrase').innerText = character.phrase;
             document.getElementById('r-val').innerText = character.rarity;
             document.getElementById('c-img').style.backgroundImage = `url('${character.image}')`;
             document.getElementById('c-frame').style.borderColor = rarityColors[character.rarity.toLowerCase()] || '#555';
+
+            const price = sellPrices[character.rarity.toLowerCase()] || 100;
+            document.getElementById('sell-btn').innerText = `ПРОДАТЬ (ЗА ${price} C)`;
+
             showScreen('screen-card');
-            updateUI();
         }
 
-        async function openPack() {
+        function sellCurrentCard() {
+            const id = currentViewingCard.id;
+            const rarity = currentViewingCard.rarity.toLowerCase();
+            const price = sellPrices[rarity] || 100;
+
+            if (myCards[id] > 0) {
+                myCards[id]--;
+                if (myCards[id] === 0) delete myCards[id];
+                coins += price;
+                tg.HapticFeedback.notificationOccurred('success');
+                alert(`Продано! Вы получили ${price} монет.`);
+                showScreen('screen-collection');
+                updateUI();
+            }
+        }
+
+        async function openDaily() {
             tg.HapticFeedback.impactOccurred('medium');
             const res = await fetch('cards.json');
             const cards = await res.json();
             const character = cards[Math.floor(Math.random() * cards.length)];
-            if (!myCards.includes(character.id)) myCards.push(character.id);
+            addCardToInventory(character.id);
             showCharacter(character);
         }
 
@@ -262,13 +280,18 @@
             const grid = document.getElementById('sub-cards');
             grid.innerHTML = '';
             fetch('cards.json').then(res => res.json()).then(allCards => {
-                myCards.forEach(id => {
+                Object.keys(myCards).forEach(id => {
                     const card = allCards.find(c => c.id == id);
+                    const count = myCards[id];
                     if(card) {
                         const div = document.createElement('div');
                         div.className = 'item-card';
                         div.style.borderColor = rarityColors[card.rarity.toLowerCase()] || '#333';
-                        div.innerHTML = `<div class="item-img" style="background-image: url('${card.image}')"></div><div class="item-name">${card.name}</div>`;
+                        div.innerHTML = `
+                            <div class="count-badge">${count}x</div>
+                            <div class="item-img" style="background-image: url('${card.image}')"></div>
+                            <div class="item-name">${card.name}</div>
+                        `;
                         div.onclick = () => showCharacter(card);
                         grid.appendChild(div);
                     }
@@ -279,12 +302,21 @@
         function renderPacks() {
             const grid = document.getElementById('sub-packs');
             grid.innerHTML = '';
-            myPacks.forEach((pack, index) => {
+            const packImages = {
+                'Basic Pack': 'images/basicpack.jpg',
+                'Golden Pack': 'images/goldenpack.jpg',
+                'Premium Pack': 'images/premiumpack.jpg'
+            };
+            Object.keys(myPacks).forEach(packName => {
+                const count = myPacks[packName];
                 const div = document.createElement('div');
                 div.className = 'item-card';
-                div.style.borderColor = rarityColors[pack.rarity] || '#333';
-                div.innerHTML = `<div class="item-img" style="background-image: url('${pack.img}')"></div><div class="item-name">${pack.name}</div>`;
-                div.onclick = () => showOpenModal(index);
+                div.innerHTML = `
+                    <div class="count-badge">${count}x</div>
+                    <div class="item-img" style="background-image: url('${packImages[packName]}')"></div>
+                    <div class="item-name">${packName}</div>
+                `;
+                div.onclick = () => showOpenModal(packName);
                 grid.appendChild(div);
             });
         }
