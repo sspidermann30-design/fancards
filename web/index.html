@@ -126,6 +126,19 @@
     </div>
 
     <script>
+        // Инициализация Telegram WebApp
+const tg = window.Telegram.WebApp;
+tg.expand(); // Развернуть на весь экран
+
+// Получаем имя пользователя
+const userName = tg.initDataUnsafe?.user?.first_name || "Игрок";
+
+// Можно вывести имя на экран (добавь в HTML элемент с id="user-name")
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('user-name')) {
+        document.getElementById('user-name').innerText = "Привет, " + userName + "!";
+    }
+});
         // ДАННЫЕ
     let coins = 50000;
     let myCards = {};
