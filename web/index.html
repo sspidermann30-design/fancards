@@ -125,198 +125,239 @@
     </div>
 
     <script>
-        // ДАННЫЕ
-        let coins = 50000;
-        let myCards = {};
-        let myPacks = {};
-        let pendingCards = [];
-        let currentViewingCard = null;
-        let selectedItem = null;
+       <script>
+    // ДАННЫЕ
+    let coins = 50000;
+    let myCards = {};
+    let myPacks = {};
+    let pendingCards = [];
+    let currentViewingCard = null;
+    let selectedItem = null;
 
-        const rarityColors = { 'common': '#888888', 'rare': '#2ecc71', 'epic': '#3498db', 'legendary': '#9b59b6', 'mystic': '#800000', 'gold': '#ffcc00' };
-        const sellPrices = { 'common': 150, 'rare': 500, 'epic': 1200, 'legendary': 3000, 'mystic': 10000 };
+    const rarityColors = { 'common': '#888888', 'rare': '#2ecc71', 'epic': '#3498db', 'legendary': '#9b59b6', 'mystic': '#800000', 'gold': '#ffcc00' };
+    const sellPrices = { 'common': 150, 'rare': 500, 'epic': 1200, 'legendary': 3000, 'mystic': 10000 };
 
-        // ИНИЦИАЛИЗАЦИЯ
-        function updateUI() {
-            document.getElementById('coin-count').innerText = coins;
-            renderCollection();
-            renderPacks();
-            localStorage.setItem('fancards_coins', coins);
-            localStorage.setItem('fancards_inventory', JSON.stringify(myCards));
-            localStorage.setItem('fancards_packs', JSON.stringify(myPacks));
+    // ТВОЯ ТАБЛИЦА ШАНСОВ
+    const dropChances = {
+        'free': { 'common': 85, 'rare': 13, 'epic': 2, 'legendary': 0 },
+        'Basic Pack': { 'common': 60, 'rare': 32, 'epic': 7, 'legendary': 1 },
+        'Golden Pack': { 'common': 35, 'rare': 45, 'epic': 15, 'legendary': 5 },
+        'Premium Pack': { 'common': 0, 'rare': 50, 'epic': 35, 'legendary': 15 }
+    };
+
+    function updateUI() {
+        // Очистка от возможных ошибок в данных
+        const clean = (obj) => {
+            let n = {};
+            for(let k in obj) if(k !== "[object Object]" && k !== "undefined") n[k] = obj[k];
+            return n;
+        };
+        myCards = clean(myCards);
+        myPacks = clean(myPacks);
+
+        document.getElementById('coin-count').innerText = coins;
+        renderCollection();
+        renderPacks();
+        localStorage.setItem('fancards_coins', coins);
+        localStorage.setItem('fancards_inventory', JSON.stringify(myCards));
+        localStorage.setItem('fancards_packs', JSON.stringify(myPacks));
+    }
+
+    if(localStorage.getItem('fancards_coins')) {
+        coins = parseInt(localStorage.getItem('fancards_coins'));
+        myCards = JSON.parse(localStorage.getItem('fancards_inventory')) || {};
+        myPacks = JSON.parse(localStorage.getItem('fancards_packs')) || {};
+    }
+
+    function showScreen(id) {
+        let screens = document.getElementsByClassName('screen');
+        for(let s of screens) s.classList.remove('active');
+        document.getElementById(id).classList.add('active');
+    }
+
+    function switchTab(type) {
+        document.getElementById('tab-cards').classList.remove('active-tab');
+        document.getElementById('tab-packs').classList.remove('active-tab');
+        if(type === 'cards') {
+            document.getElementById('tab-cards').classList.add('active-tab');
+            document.getElementById('sub-cards').style.display = 'grid';
+            document.getElementById('sub-packs').style.display = 'none';
+        } else {
+            document.getElementById('tab-packs').classList.add('active-tab');
+            document.getElementById('sub-cards').style.display = 'none';
+            document.getElementById('sub-packs').style.display = 'grid';
         }
+    }
 
-        // ЗАГРУЗКА ИЗ ПАМЯТИ
-        if(localStorage.getItem('fancards_coins')) {
-            coins = parseInt(localStorage.getItem('fancards_coins'));
-            myCards = JSON.parse(localStorage.getItem('fancards_inventory')) || {};
-            myPacks = JSON.parse(localStorage.getItem('fancards_packs')) || {};
-        }
+    function showBuyModal(name, count, price, img, rarity) {
+        selectedItem = { name, count, price, img, rarity };
+        document.getElementById('m-name').innerText = name;
+        document.getElementById('m-info').innerText = "Содержит " + count + " карт";
+        document.getElementById('m-price').innerText = price + " C";
+        document.getElementById('m-img').style.backgroundImage = "url('" + img + "')";
+        document.getElementById('m-btn').innerText = "КУПИТЬ";
+        document.getElementById('m-btn').onclick = confirmPurchase;
+        document.getElementById('modal').style.display = 'flex';
+    }
 
-        // НАВИГАЦИЯ
-        function showScreen(id) {
-            let screens = document.getElementsByClassName('screen');
-            for(let s of screens) s.classList.remove('active');
-            document.getElementById(id).classList.add('active');
-        }
+    function confirmPurchase() {
+        if(coins >= selectedItem.price) {
+            coins -= selectedItem.price;
+            myPacks[selectedItem.name] = (myPacks[selectedItem.name] || 0) + 1;
+            closeModal();
+            updateUI();
+        } else { alert("Недостаточно монет!"); }
+    }
 
-        function switchTab(type) {
-            document.getElementById('tab-cards').classList.remove('active-tab');
-            document.getElementById('tab-packs').classList.remove('active-tab');
-            if(type === 'cards') {
-                document.getElementById('tab-cards').classList.add('active-tab');
-                document.getElementById('sub-cards').style.display = 'grid';
-                document.getElementById('sub-packs').style.display = 'none';
-            } else {
-                document.getElementById('tab-packs').classList.add('active-tab');
-                document.getElementById('sub-cards').style.display = 'none';
-                document.getElementById('sub-packs').style.display = 'grid';
+    // ГЛАВНАЯ ЛОГИКА РАНДОМА ПО ШАНСАМ
+    function pullCard(allCards, packType) {
+        const chances = dropChances[packType] || dropChances['free'];
+        const roll = Math.random() * 100;
+        let currentRange = 0;
+        let selectedRarity = 'common';
+
+        for (let r in chances) {
+            currentRange += chances[r];
+            if (roll <= currentRange) {
+                selectedRarity = r;
+                break;
             }
         }
 
-        // МАРКЕТ
-        function showBuyModal(name, count, price, img, rarity) {
-            selectedItem = { name, count, price, img, rarity };
-            document.getElementById('m-name').innerText = name;
-            document.getElementById('m-info').innerText = "Содержит " + count + " карт";
-            document.getElementById('m-price').innerText = price + " C";
-            document.getElementById('m-img').style.backgroundImage = "url('" + img + "')";
-            document.getElementById('m-btn').innerText = "КУПИТЬ";
-            document.getElementById('m-btn').onclick = confirmPurchase;
-            document.getElementById('modal').style.display = 'flex';
-        }
+        let pool = allCards.filter(c => c.rarity.toLowerCase() === selectedRarity);
 
-        function confirmPurchase() {
-            if(coins >= selectedItem.price) {
-                coins -= selectedItem.price;
-                myPacks[selectedItem.name] = (myPacks[selectedItem.name] || 0) + 1;
+        // Если карт такой редкости нет в JSON, берем Common как запасной вариант
+        if (pool.length === 0) pool = allCards.filter(c => c.rarity.toLowerCase() === 'common');
+        // Если и их нет (мало ли), берем вообще любую
+        if (pool.length === 0) pool = allCards;
+
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function openDaily() {
+        fetch('cards.json').then(r => r.json()).then(allCards => {
+            let card = pullCard(allCards, 'free');
+            myCards[card.id] = (myCards[card.id] || 0) + 1;
+            showCharacter(card, false);
+            updateUI();
+        });
+    }
+
+    function showPackOpen(name) {
+        selectedItem = { name: name };
+        document.getElementById('m-name').innerText = name;
+        document.getElementById('m-info').innerText = "В наличии: " + myPacks[name] + " шт.";
+        document.getElementById('m-price').innerText = "";
+        document.getElementById('m-btn').innerText = "ОТКРЫТЬ";
+        document.getElementById('m-btn').onclick = processPackOpening;
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function processPackOpening() {
+        let name = selectedItem.name;
+        if(myPacks[name] > 0) {
+            myPacks[name]--;
+            if(myPacks[name] === 0) delete myPacks[name];
+
+            let count = (name === 'Basic Pack') ? 3 : (name === 'Golden Pack' ? 5 : 10);
+
+            fetch('cards.json').then(r => r.json()).then(allCards => {
+                pendingCards = [];
+                for(let i=0; i<count; i++) {
+                    pendingCards.push(pullCard(allCards, name));
+                }
+                // Сначала добавляем все в инвентарь
+                pendingCards.forEach(c => {
+                    myCards[c.id] = (myCards[c.id] || 0) + 1;
+                });
                 closeModal();
                 updateUI();
-            } else { alert("Недостаточно монет!"); }
-        }
-
-        // ОТКРЫТИЕ
-        function openDaily() {
-            fetch('cards.json').then(r => r.json()).then(allCards => {
-                let card = allCards[Math.floor(Math.random() * allCards.length)];
-                myCards[card.id] = (myCards[card.id] || 0) + 1;
-                showCharacter(card, false);
-                updateUI();
+                showNextPendingCard();
             });
         }
+    }
 
-        function showPackOpen(name) {
-            selectedItem = { name: name };
-            document.getElementById('m-name').innerText = name;
-            document.getElementById('m-info').innerText = "У вас есть: " + myPacks[name] + " шт.";
-            document.getElementById('m-price').innerText = "";
-            document.getElementById('m-btn').innerText = "ОТКРЫТЬ";
-            document.getElementById('m-btn').onclick = processPackOpening;
-            document.getElementById('modal').style.display = 'flex';
+    function showNextPendingCard() {
+        if(pendingCards.length > 0) {
+            let card = pendingCards.shift();
+            showCharacter(card, pendingCards.length > 0);
         }
+    }
 
-        function processPackOpening() {
-            let name = selectedItem.name;
-            if(myPacks[name] > 0) {
-                myPacks[name]--;
-                if(myPacks[name] === 0) delete myPacks[name];
+    function showCharacter(card, hasMore) {
+        currentViewingCard = card;
+        document.getElementById('c-name').innerText = card.name;
+        document.getElementById('c-phrase').innerText = card.phrase;
+        document.getElementById('r-val').innerText = card.rarity;
+        document.getElementById('c-img').style.backgroundImage = "url('" + card.image + "')";
+        document.getElementById('c-frame').style.borderColor = rarityColors[card.rarity.toLowerCase()] || '#555';
 
-                let count = (name === 'Basic Pack') ? 3 : (name === 'Golden Pack' ? 5 : 10);
+        let price = sellPrices[card.rarity.toLowerCase()] || 100;
+        document.getElementById('sell-btn').innerText = "ПРОДАТЬ (ЗА " + price + " C)";
 
-                fetch('cards.json').then(r => r.json()).then(allCards => {
-                    pendingCards = [];
-                    for(let i=0; i<count; i++) {
-                        let c = allCards[Math.floor(Math.random() * allCards.length)];
-                        pendingCards.push(c);
-                        myCards[c.id] = (myCards[c.id] || 0) + 1;
-                    }
-                    closeModal();
-                    updateUI();
-                    showNextPendingCard();
-                });
-            }
+        if(hasMore) {
+            document.getElementById('next-card-btn').style.display = 'block';
+            document.getElementById('close-card-btn').style.display = 'none';
+            document.getElementById('sell-btn').style.display = 'none';
+        } else {
+            document.getElementById('next-card-btn').style.display = 'none';
+            document.getElementById('close-card-btn').style.display = 'block';
+            document.getElementById('sell-btn').style.display = 'block';
         }
+        showScreen('screen-card');
+    }
 
-        function showNextPendingCard() {
-            if(pendingCards.length > 0) {
-                let card = pendingCards.shift();
-                showCharacter(card, pendingCards.length > 0);
-            }
+    function sellCurrentCard() {
+        let price = sellPrices[currentViewingCard.rarity.toLowerCase()] || 100;
+        let id = currentViewingCard.id;
+        if(myCards[id] > 0) {
+            myCards[id]--;
+            if(myCards[id] === 0) delete myCards[id];
+            coins += price;
+            showScreen('screen-collection');
+            updateUI();
         }
+    }
 
-        function showCharacter(card, hasMore) {
-            currentViewingCard = card;
-            document.getElementById('c-name').innerText = card.name;
-            document.getElementById('c-phrase').innerText = card.phrase;
-            document.getElementById('r-val').innerText = card.rarity;
-            document.getElementById('c-img').style.backgroundImage = "url('" + card.image + "')";
-            document.getElementById('c-frame').style.borderColor = rarityColors[card.rarity.toLowerCase()] || '#555';
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-            let price = sellPrices[card.rarity.toLowerCase()] || 100;
-            document.getElementById('sell-btn').innerText = "ПРОДАТЬ (ЗА " + price + " C)";
-
-            if(hasMore) {
-                document.getElementById('next-card-btn').style.display = 'block';
-                document.getElementById('close-card-btn').style.display = 'none';
-                document.getElementById('sell-btn').style.display = 'none';
-            } else {
-                document.getElementById('next-card-btn').style.display = 'none';
-                document.getElementById('close-card-btn').style.display = 'block';
-                document.getElementById('sell-btn').style.display = 'block';
-            }
-            showScreen('screen-card');
-        }
-
-        function sellCurrentCard() {
-            let price = sellPrices[currentViewingCard.rarity.toLowerCase()] || 100;
-            let id = currentViewingCard.id;
-            if(myCards[id] > 0) {
-                myCards[id]--;
-                if(myCards[id] === 0) delete myCards[id];
-                coins += price;
-                showScreen('screen-collection');
-                updateUI();
-            }
-        }
-
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-        function renderCollection() {
-            let grid = document.getElementById('sub-cards');
-            grid.innerHTML = '';
-            fetch('cards.json').then(r => r.json()).then(allCards => {
-                for(let id in myCards) {
-                    let card = allCards.find(c => c.id == id);
-                    if(card) {
-                        let div = document.createElement('div');
-                        div.className = 'item-card';
-                        div.style.borderColor = rarityColors[card.rarity.toLowerCase()];
-                        div.innerHTML = '<div class="count-badge">' + myCards[id] + 'x</div>' +
-                                        '<div class="item-img" style="background-image: url(\'' + card.image + '\')"></div>' +
-                                        '<div class="item-name">' + card.name + '</div>';
-                        div.onclick = function() { showCharacter(card, false); };
-                        grid.appendChild(div);
-                    }
+    function renderCollection() {
+        let grid = document.getElementById('sub-cards');
+        grid.innerHTML = '';
+        fetch('cards.json').then(r => r.json()).then(allCards => {
+            for(let id in myCards) {
+                let card = allCards.find(c => c.id == id);
+                if(card) {
+                    let div = document.createElement('div');
+                    div.className = 'item-card';
+                    div.style.borderColor = rarityColors[card.rarity.toLowerCase()];
+                    div.innerHTML = '<div class="count-badge">' + myCards[id] + 'x</div>' +
+                                    '<div class="item-img" style="background-image: url(\'' + card.image + '\')"></div>' +
+                                    '<div class="item-name">' + card.name + '</div>';
+                    div.onclick = function() { showCharacter(card, false); };
+                    grid.appendChild(div);
                 }
-            });
-        }
-
-        function renderPacks() {
-            let grid = document.getElementById('sub-packs');
-            grid.innerHTML = '';
-            let packImgs = {'Basic Pack': 'images/basicpack.jpg', 'Golden Pack': 'images/goldenpack.jpg', 'Premium Pack': 'images/premiumpack.jpg'};
-            for(let name in myPacks) {
-                let div = document.createElement('div');
-                div.className = 'item-card';
-                div.innerHTML = '<div class="count-badge">' + myPacks[name] + 'x</div>' +
-                                '<div class="item-img" style="background-image: url(\'' + packImgs[name] + '\')"></div>' +
-                                '<div class="item-name">' + name + '</div>';
-                div.onclick = function() { showPackOpen(name); };
-                grid.appendChild(div);
             }
-        }
+        });
+    }
 
-        updateUI();
+    function renderPacks() {
+        let grid = document.getElementById('sub-packs');
+        grid.innerHTML = '';
+        let packImgs = {'Basic Pack': 'images/basicpack.jpg', 'Golden Pack': 'images/goldenpack.jpg', 'Premium Pack': 'images/premiumpack.jpg'};
+        for(let name in myPacks) {
+            let div = document.createElement('div');
+            div.className = 'item-card';
+            div.innerHTML = '<div class="count-badge">' + myPacks[name] + 'x</div>' +
+                            '<div class="item-img" style="background-image: url(\'' + packImgs[name] + '\')"></div>' +
+                            '<div class="item-name">' + name + '</div>';
+            div.onclick = function() { showPackOpen(name); };
+            grid.appendChild(div);
+        }
+    }
+
+    updateUI();
+</script>
     </script>
 </body>
 </html>
