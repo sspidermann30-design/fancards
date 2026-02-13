@@ -140,7 +140,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
         // ДАННЫЕ
-    let coins = 50000;
+    // Список ID, которым положен бонус (впиши ваши ID вместо этих цифр)
+const adminIds = [123456789, 987654321];
+const userId = tg.initDataUnsafe?.user?.id;
+
+let coins;
+
+// Проверяем, есть ли уже сохраненные монеты
+if (localStorage.getItem('coins')) {
+    coins = parseInt(localStorage.getItem('coins'));
+} else {
+    // Если игрок зашел ПЕРВЫЙ РАЗ, проверяем на VIP
+    if (adminIds.includes(userId)) {
+        coins = 50000; // Бонус для вас
+    } else {
+        coins = 0; // Обычным смертным — 0 :)
+    }
+    localStorage.setItem('coins', coins);
+}
+
+let myCards = {}; // Это твоя строка 144, оставляем как есть
     let myCards = {};
     let myPacks = {};
     let pendingCards = [];
