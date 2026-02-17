@@ -106,8 +106,9 @@
         <div id="r-val" style="font-size:10px; color:#888; text-transform:uppercase; margin-bottom:5px"></div>
         <div class="image-frame" id="c-frame"><div class="card-img" id="c-img"></div></div>
         <div style="text-align:center; margin-top:10px">
+        <div id="c-series" style="color: var(--gold); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;"></div>
             <h2 id="c-name" style="margin:0; font-size:20px"></h2>
-            <p id="c-phrase" style="font-style:italic; color:#aaa; font-size:12px; margin:3px 0"></p>
+        <p id="c-phrase" style="font-style:italic; color:#aaa; font-size:12px; margin:3px 0"></p>
         </div>
         <button id="sell-btn" class="btn-sell" onclick="sellCurrentCard()"></button>
         <button id="next-card-btn" class="menu-btn" style="display:none; background: var(--gold); margin-top:10px;" onclick="showNextPendingCard()">СЛЕДУЮЩАЯ КАРТА</button>
@@ -317,6 +318,8 @@ if (localStorage.getItem('coins')) {
     function showCharacter(card, hasMore) {
         currentViewingCard = card;
         document.getElementById('c-name').innerText = card.name;
+        document.getElementById('c-series').innerText = card.series || "FAN COLLECTION";
+        document.getElementById('c-phrase').innerText = card.phrase || card.description || "";
         document.getElementById('c-phrase').innerText = card.phrase;
         document.getElementById('r-val').innerText = card.rarity;
         document.getElementById('c-img').style.backgroundImage = "url('" + card.image + "')";
