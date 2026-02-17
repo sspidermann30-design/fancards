@@ -104,10 +104,10 @@
     </div>
 
     <div id="screen-card" class="screen">
-        <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
-            <button onclick="toggleCardMenu()" style="background: rgba(0,0,0,0.5); border: 1px solid #444; color: white; border-radius: 50%; width: 30px; height: 30px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">⋮</button>
-            <div id="card-menu" style="display: none; position: absolute; right: 0; top: 35px; background: #222; border: 1px solid #555; border-radius: 8px; width: 130px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.8);">
-                <button onclick="sendToCraft()" style="width: 100%; background: none; border: none; color: white; padding: 12px; text-align: left; font-size: 13px; cursor: pointer; border-bottom: 1px solid #333;">⚒️ В крафт</button>
+        <div style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+            <button onclick="toggleCardMenu()" style="background: rgba(0,0,0,0.6); border: 1px solid #555; color: white; border-radius: 50%; width: 35px; height: 35px; font-size: 20px; cursor: pointer;">⋮</button>
+            <div id="card-menu" style="display: none; position: absolute; right: 0; top: 40px; background: #222; border: 1px solid #444; border-radius: 8px; width: 130px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                <button onclick="sendToCraft()" style="width: 100%; background: none; border: none; color: white; padding: 12px; text-align: left; font-size: 14px; cursor: pointer;">⚒️ В крафт</button>
             </div>
         </div>
         <div id="r-val" style="font-size:10px; color:#888; text-transform:uppercase; margin-bottom:5px"></div>
@@ -306,26 +306,32 @@
             showCharacter(card, pendingCards.length > 0);
         }
     }
-    // Функция для открытия/закрытия меню из трех точек
     function toggleCardMenu() {
-    const menu = document.getElementById('card-menu');
-    if (menu) {
-        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    const m = document.getElementById('card-menu');
+    m.style.display = (m.style.display === 'none' || m.style.display === '') ? 'block' : 'none';
     }
-    }
-    // Функция, которая сработает при нажатии "В крафт"
     function sendToCraft() {
-    // 1. Прячем меню "три точки"
-    document.getElementById('card-menu').style.display = 'none';
+    if (currentViewingCard.rarity === 'Legendary') {
+    alert("Легендарки нельзя крафтить!");
+    return;
+    }
+    document.getElementById('card-menu').style.display = 'none'; // Закрыть меню
+    craftQueue = [currentViewingCard]; // Кладем текущую карту первой
+    showScreen('screen-craft'); // Переходим в кузницу
+    renderCraftUI(); // Рисуем слоты
+    }
+    function renderCraftUI() {
+    const grid = document.getElementById('craft-slots-grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < 10; i++) {
+        const card = craftQueue[i];
+        grid.innerHTML += `<div style="aspect-ratio:2/3; border:1px ${card ? 'solid':'dashed'} #555; border-radius:4px; background-size:cover; background-image:${card ? `url(${card.image})` : 'none'}"></div>`;
+    }
+    document.getElementById('craft-count-info').innerText = `${craftQueue.length} / 10`;
+    document.getElementById('btn-start-craft').style.display = craftQueue.length === 10 ? 'block' : 'none';
 
-    // 2. Запоминаем карту, которую хотим крафтить
-    craftQueue = [currentViewingCard];
-
-    // 3. Открываем экран кузницы
-    showScreen('screen-craft');
-
-    // 4. Запускаем отрисовку слотов (эту функцию напишем следующей)
-    renderCraftUI();
+    // Вызываем функцию показа остальных карт (мы её писали раньше, она подгружает карты той же редкости)
+    renderAvailableForCraft();
 }
 
     function showCharacter(card, hasMore) {
@@ -461,23 +467,18 @@ function updateCraftSlots() {
         }
     </script>
     <div id="screen-craft" class="screen" style="display:none; padding: 15px;">
-        <h1 style="text-align: center; color: var(--gold); font-size: 24px;">КУЗНИЦА</h1>
-        <p style="font-size: 11px; color: #aaa; text-align: center; margin-bottom: 15px;">
-            Выберите 10 карт одной редкости, чтобы создать карту рангом выше!
-        </p>
-
-        <div id="craft-slots-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; border: 1px solid #444; min-height: 120px;">
+        <h2 style="color: var(--gold); text-align: center;">КУЗНИЦА</h2>
+        <div id="craft-slots-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; border: 1px solid #444; min-height: 100px;">
 
         </div>
         <div style="text-align: center; margin-bottom: 10px;">
-            <span id="craft-count-info" style="color: var(--gold); font-weight: bold; font-size: 16px;">0 / 10</span>
+            <span id="craft-count-info" style="color: var(--gold); font-weight: bold;">0 / 10</span>
         </div>
-        <h3 style="font-size: 12px; color: #888; text-transform: uppercase; margin-bottom: 10px;">Доступно для крафта:</h3>
-        <div id="craft-available-list" class="grid grid-3" style="max-height: 200px; overflow-y: auto; padding-right: 5px;">
+        <div id="craft-available-list" class="grid grid-3" style="max-height: 250px; overflow-y: auto;">
 
         </div>
-        <button id="btn-start-craft" class="menu-btn" style="display: none; background: var(--gold); color: black; margin-top: 20px;" onclick="processCraftAnimation()">⚒️ НАЧАТЬ КРАФТ</button>
-        <button class="back-nav" style="margin-top: 15px;" onclick="closeCraft()">ОТМЕНА</button>
+        <button id="btn-start-craft" class="menu-btn" style="display: none; background: var(--gold); color: black; margin-top: 15px;" onclick="processCraftAction()">⚒️ НАЧАТЬ КРАФТ</button>
+        <button class="back-nav" onclick="showScreen('screen-main')">отмена</button>
     </div>
 </body>
 </html>
