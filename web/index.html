@@ -111,8 +111,11 @@
             <p id="c-phrase" style="font-style:italic; color:#aaa; font-size:12px; margin:3px 0"></p>
             <p id="c-description" style="color:#888; font-size:11px; margin:5px 0; line-height:1.2;"></p>
         </div>
+        <button id="sell-btn" class="btn-sell" onclick="sellCurrentCard()"></button>
+        <button id="next-card-btn" class="menu-btn" style="display:none; background: var(--gold); margin-top:10px;" onclick="showNextPendingCard()">СЛЕДУЮЩАЯ КАРТА</button>
+        <button id="close-card-btn" class="menu-btn" style="background: white; color: black; margin-top:10px;" onclick="showScreen('screen-collection')">ЗАКРЫТЬ</button>
     </div>
-    </div>
+
     <div class="modal" id="modal">
         <div class="modal-content">
             <h2 id="m-name"></h2>
@@ -314,21 +317,11 @@ if (localStorage.getItem('coins')) {
     }
 
     function showCharacter(card, hasMore) {
-    currentViewingCard = card;
-
-    // 1. Имя персонажа
-    document.getElementById('c-name').innerText = card.name;
-
-    // 2. Тема (из твоего JSON: "Гарри Поттер")
-    // ВАЖНО: пишем именно card.theme
-    document.getElementById('c-series').innerText = card.theme || "";
-
-    // 3. Фраза
-    document.getElementById('c-phrase').innerText = card.phrase || "";
-
-    // 4. Описание (из твоего JSON: "Директор Хогвартса...")
-    // ВАЖНО: пишем именно card.description
-    document.getElementById('c-description').innerText = card.description || "";
+        currentViewingCard = card;
+        document.getElementById('c-name').innerText = card.name;
+        document.getElementById('c-series').innerText = card.theme || "";
+        document.getElementById('c-phrase').innerText = card.phrase || "";
+        document.getElementById('c-description').innerText = card.description || "";
         document.getElementById('r-val').innerText = card.rarity;
         document.getElementById('c-img').style.backgroundImage = "url('" + card.image + "')";
         document.getElementById('c-frame').style.borderColor = rarityColors[card.rarity.toLowerCase()] || '#555';
