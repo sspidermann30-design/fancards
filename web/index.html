@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FanCards - Harry Potter Edition</title>
+    <title>FanCards Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #0f0f0f;
+            --bg-color: #0d0d0d;
             --card-bg: #1a1a1a;
             --gold: #ffd700;
             --text-color: #ffffff;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -22,224 +22,130 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow: hidden;
             height: 100vh;
+            overflow: hidden;
         }
 
-        #app {
-            width: 100%;
-            max-width: 500px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
+        #app { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; }
 
-        header {
-            padding: 20px;
-            text-align: center;
-            background: linear-gradient(to bottom, #222, #0f0f0f);
-            border-bottom: 2px solid var(--gold);
-        }
+        header { padding: 20px; text-align: center; border-bottom: 2px solid var(--gold); background: #111; }
 
-        .balance-container {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
+        .balance-container { font-size: 24px; font-weight: bold; color: var(--gold); }
 
-        .menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            padding: 20px;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
+        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
 
         .menu-item {
             background: var(--card-bg);
             border: 1px solid #333;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 20px;
             text-align: center;
-            transition: transform 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
         }
 
-        .menu-item:active { transform: scale(0.95); }
+        .screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
 
-        .btn-gold {
-            background: var(--gold);
-            color: black;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-        }
+        /* Дизайн карточки */
+        #c-img { width: 280px; height: 380px; background-size: cover; background-position: center; border-radius: 15px; border: 2px solid #333; margin: 0 auto; }
 
-        /* Экраны */
-        .screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-color);
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-        }
-
-        /* Экран карточки (отрисовка) */
-        #screen-card {
-            background: rgba(0,0,0,0.95);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        #c-img {
-            width: 280px;
-            height: 380px;
-            background-size: cover;
-            background-position: center;
-            border-radius: 15px;
-            border: 2px solid #444;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-        }
-
-        .card-info {
-            text-align: center;
-            margin-top: 15px;
-            width: 280px;
-        }
-
-        #c-series {
-            color: var(--gold);
-            font-size: 13px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        #c-name {
-            margin: 5px 0;
-            font-size: 24px;
-        }
-
-        #c-phrase {
-            font-style: italic;
-            color: #bbb;
-            font-size: 14px;
-            margin: 10px 0;
-            line-height: 1.4;
-        }
-
-        #r-val {
-            font-weight: bold;
-            color: var(--gold);
-        }
+        .btn-gold { background: var(--gold); color: black; border: none; padding: 12px; border-radius: 20px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="app">
     <header>
-        <div id="user-greeting" style="font-size: 14px; margin-bottom: 5px; color: #aaa;"></div>
+        <div id="user-greeting" style="font-size: 12px; color: #888;"></div>
         <div class="balance-container">✨ <span id="balance">0</span></div>
     </header>
 
     <div class="menu">
-        <div class="menu-item" onclick="openDaily()">
-            <h3>ЕЖЕДНЕВНЫЙ ПАК</h3>
-            <p style="font-size: 12px; color: #888;">Бесплатно раз в 24ч</p>
-        </div>
-        <div class="menu-item" onclick="alert('Магазин в разработке!')">
-            <h3>МАГАЗИН</h3>
-            <p style="font-size: 12px; color: #888;">Купить паки</p>
-        </div>
-        <div class="menu-item" onclick="alert('Коллекция скоро появится!')" style="grid-column: span 2;">
-            <h3>МОЯ КОЛЛЕКЦИЯ</h3>
-        </div>
+        <div class="menu-item" onclick="openDaily()">🎁 ЕЖЕДНЕВНЫЙ ПАК</div>
+        <div class="menu-item" onclick="showScreen('screen-shop')">🛒 МАГАЗИН</div>
+        <div class="menu-item" onclick="showScreen('screen-collection')" style="grid-column: span 2;">📚 МОЯ КОЛЛЕКЦИЯ</div>
     </div>
 </div>
 
-<div id="screen-card" class="screen">
+<div id="screen-shop" class="screen">
+    <h2>МАГАЗИН</h2>
+    <div class="menu-item" onclick="buyPack('Basic Pack', 500)">📦 Basic Pack (500 💰)</div>
+    <button class="btn-gold" onclick="hideScreens()">НАЗАД</button>
+</div>
+
+<div id="screen-collection" class="screen">
+    <h2>МОЯ КОЛЛЕКЦИЯ</h2>
+    <div id="collection-list" style="overflow-y: auto; flex-grow: 1;"></div>
+    <button class="btn-gold" onclick="hideScreens()">НАЗАД</button>
+</div>
+
+<div id="screen-card" class="screen" style="align-items: center; justify-content: center; background: rgba(0,0,0,0.95);">
     <div id="c-img"></div>
-    <div class="card-info">
-        <div id="c-series"></div> <h2 id="c-name"></h2>      <p id="c-phrase"></p>     <div style="font-size: 14px;">РЕДКОСТЬ: <span id="r-val"></span></div>
+    <div style="text-align:center; width: 280px; margin-top: 15px;">
+        <div id="c-series" style="color: var(--gold); font-size: 12px; font-weight: bold; text-transform: uppercase;"></div>
+        <h2 id="c-name" style="margin: 5px 0;"></h2>
+        <p id="c-phrase" style="font-style: italic; color: #aaa; font-size: 14px;"></p>
+        <div style="font-size: 12px; color: #777;">РЕДКОСТЬ: <span id="r-val" style="color:var(--gold)"></span></div>
     </div>
-    <button class="btn-gold" style="margin-top: 30px;" onclick="closeCard()">ЗАКРЫТЬ</button>
+    <button class="btn-gold" style="width: 200px;" onclick="closeCard()">ЗАКРЫТЬ</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // 1. ДАННЫЕ И ЛОГИКА МОНЕТ (ДЛЯ ТЕБЯ И ДРУГА)
+    // --- ДАННЫЕ (БЕЗ ДУБЛИКАТОВ) ---
     const adminIds = [994661814, 7049962197];
     const userId = tg.initDataUnsafe?.user?.id;
-    const userName = tg.initDataUnsafe?.user?.first_name || "Волшебник";
 
-    document.getElementById('user-greeting').innerText = "Привет, " + userName + "!";
-
-    let coins;
-    if (localStorage.getItem('coins')) {
-        coins = parseInt(localStorage.getItem('coins'));
-    } else {
-        // Первый вход
-        coins = adminIds.includes(userId) ? 50000 : 0;
-        localStorage.setItem('coins', coins);
-    }
-
-    // 2. ИНВЕНТАРЬ (БЕЗ ДУБЛИКАТОВ)
+    let coins = localStorage.getItem('coins') ? parseInt(localStorage.getItem('coins')) : (adminIds.includes(userId) ? 50000 : 0);
     let myCards = localStorage.getItem('fancards_inv') ? JSON.parse(localStorage.getItem('fancards_inv')) : {};
+    let pendingCards = [];
 
-    // 3. ФУНКЦИЯ ОТКРЫТИЯ ПАКА
-    function openDaily() {
-        // Проверка времени (Таймер)
-        const lastOpen = localStorage.getItem('last_daily');
-        const now = Date.now();
-        if (lastOpen && (now - lastOpen < 86400000)) {
-            const h = Math.ceil((86400000 - (now - lastOpen)) / 3600000);
-            alert("Следующий пак будет доступен через " + h + " ч.");
-            return;
-        }
+    document.getElementById('user-greeting').innerText = "Привет, " + (tg.initDataUnsafe?.user?.first_name || "Волшебник");
 
-        fetch('cards.json')
-            .then(response => response.json())
-            .then(cards => {
-                const randomCard = cards[Math.floor(Math.random() * cards.length)];
-
-                // Сохраняем результат
-                myCards[randomCard.id] = (myCards[randomCard.id] || 0) + 1;
-                localStorage.setItem('last_daily', now);
-
-                showCharacter(randomCard);
-                updateUI();
-            })
-            .catch(err => alert("Ошибка загрузки cards.json: " + err));
+    // --- НАВИГАЦИЯ ---
+    function showScreen(id) {
+        hideScreens();
+        document.getElementById(id).style.display = 'flex';
+        if(id === 'screen-collection') updateCollectionUI();
     }
 
-    // 4. ОТОБРАЖЕНИЕ КАРТОЧКИ
+    function hideScreens() {
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+    }
+
+    // --- ЛОГИКА ---
+    function openDaily() {
+        const last = localStorage.getItem('last_daily');
+        if (last && (Date.now() - last < 86400000)) {
+            alert("Пак будет доступен завтра!"); return;
+        }
+        fetch('cards.json').then(r => r.json()).then(cards => {
+            const card = cards[Math.floor(Math.random() * cards.length)];
+            addCard(card);
+            localStorage.setItem('last_daily', Date.now());
+            showCharacter(card);
+        });
+    }
+
+    function buyPack(name, price) {
+        if (coins < price) { alert("Недостаточно монет!"); return; }
+        coins -= price;
+        openDaily(); // Для примера открываем пак
+        updateUI();
+    }
+
+    function addCard(card) {
+        myCards[card.id] = (myCards[card.id] || 0) + 1;
+        updateUI();
+    }
+
     function showCharacter(card) {
         document.getElementById('c-name').innerText = card.name;
-        document.getElementById('c-img').style.backgroundImage = "url('" + card.image + "')";
-        document.getElementById('r-val').innerText = card.rarity.toUpperCase();
-
-        // Серия и Фраза
-        document.getElementById('c-series').innerText = card.series ? card.series : "БАЗОВАЯ СЕРИЯ";
+        document.getElementById('c-series').innerText = card.series || "БАЗОВАЯ СЕРИЯ";
         document.getElementById('c-phrase').innerText = card.phrase ? `"${card.phrase}"` : "";
-
+        document.getElementById('r-val').innerText = card.rarity;
+        document.getElementById('c-img').style.backgroundImage = `url('${card.image}')`;
         document.getElementById('screen-card').style.display = 'flex';
     }
 
@@ -253,10 +159,15 @@
         localStorage.setItem('fancards_inv', JSON.stringify(myCards));
     }
 
-    // Инициализация
+    function updateCollectionUI() {
+        const list = document.getElementById('collection-list');
+        list.innerHTML = "";
+        for (let id in myCards) {
+            list.innerHTML += `<div class="menu-item">Карта ID: ${id} (x${myCards[id]})</div>`;
+        }
+    }
+
     updateUI();
-
 </script>
-
 </body>
 </html>
