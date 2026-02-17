@@ -315,7 +315,7 @@ if (localStorage.getItem('coins')) {
     function showCharacter(card, hasMore) {
         currentViewingCard = card;
         document.getElementById('c-name').innerText = card.name;
-        document.getElementById('c-series').innerText = card.theme || "FAN COLLECTION";
+        document.getElementById('c-series').innerText = card.theme || "";
         document.getElementById('c-phrase').innerText = card.phrase || "";
         document.getElementById('c-description').innerText = card.description || "";
         document.getElementById('r-val').innerText = card.rarity;
